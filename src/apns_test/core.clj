@@ -1,6 +1,7 @@
 (ns apns-test.core
   (:require [herolabs.apns.ssl  :as ssl ]
             [clojure.java.io    :as io  ])
+  (:import [io.netty.channel.nio NioEventLoopGroup])
   (:use herolabs.apns.feedback))
 
 (defn -main []
@@ -11,8 +12,10 @@
                 :trace true)
         ctx   (ssl/ssl-context
                 :trust-managers tm
-                :keystore       store)]
+                :keystore       store)
+        el    (NioEventLoopGroup.)]
     (println "Fetching feedback...")
-    (doseq [[token timestamp] (feedback (dev-address) ctx)]
+    (doseq [[token timestamp] (feedback (dev-address) ctx :event-loop el)]
       (println timestamp ":" token))
-    (println "Terminating...")))
+    (println "Terminating...")
+    (.shutdown el)))
